@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lara Anda, Dança e Porta</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #e0f7fa;
+            margin: 0;
+            font-family: Arial, sans-serif;
+            color: #333;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .game-area {
+            position: relative;
+            width: 800px;
+            height: 400px;
+            border: 2px solid #00796b;
+            box-shadow: 5px 5px 15px rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            overflow: hidden;
+            background-color: #f5f5dc;
+        }
+
+        /* Fundo da sala de aula */
+        .game-area::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 60%;
+            background: linear-gradient(180deg, #87ceeb 0%, #b0e0e6 40%, #ddd 40%, #ddd 100%);
+            z-index: 1;
+        }
+
+        /* Lousa na parede */
+        .blackboard {
+            position: absolute;
+            top: 30px;
+            left: 100px;
+            width: 200px;
+            height: 100px;
+            background-color: #2f4f2f;
+            border: 5px solid #8b4513;
+            border-radius: 5px;
+            z-index: 1;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .blackboard:hover {
+            background-color: #3a5f3a;
+        }
+
+        /* Mesas da sala */
+        .desk1, .desk2 {
+            position: absolute;
+            bottom: 80px;
+            width: 60px;
+            height: 40px;
+            background-color: #8b4513;
+            border: 2px solid #654321;
+            border-radius: 3px;
+            z-index: 1;
+        }
+
+        .desk1 {
+            left: 150px;
+        }
+
+        .desk2 {
+            left: 300px;
+        }
+
+        /* Caderno na mesa 2 */
+        .notebook {
+            position: absolute;
+            bottom: 95px;
+            left: 310px;
+            width: 40px;
+            height: 30px;
+            background-color: #fff;
+            border: 2px solid #000;
+            border-radius: 2px;
+            z-index: 2;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .notebook:hover {
+            transform: scale(1.1);
+        }
+
+        /* Linhas do caderno */
+        .notebook::before {
+            content: '';
+            position: absolute;
+            top: 5px;
+            left: 3px;
+            width: 32px;
+            height: 1px;
+            background-color: #ddd;
+            box-shadow: 0 5px 0 #ddd, 0 10px 0 #ddd, 0 15px 0 #ddd;
+        }
+
+        /* Cadeiras */
+        .chair1, .chair2 {
+            position: absolute;
+            bottom: 50px;
+            width: 25px;
+            height: 25px;
+            background-color: #654321;
+            border-radius: 3px;
+            z-index: 1;
+            transition: background-color 0.2s;
+        }
+
+        .chair1 {
+            left: 165px;
+            cursor: pointer;
+        }
+
+        .chair1:hover {
+            background-color: #8b4513;
+        }
+
+        .chair2 {
+            left: 315px;
+        }
+
+        /* A porta */
+        .door {
+            position: absolute;
+            right: 0;
+            bottom: 0;
+            width: 80px;
+            height: 300px;
+            background-color: #8b4513;
+            border-left: 5px solid #654321;
+            border-top: 5px solid #654321;
+            border-right: 5px solid #654321;
+            box-sizing: border-box;
+            border-bottom-left-radius: 5px;
+            border-bottom-right-radius: 5px;
+            z-index: 3;
+        }
+
+        .door::before {
+            content: '';
+            position: absolute;
+            left: 15px;
+            top: 150px;
+            width: 15px;
+            height: 15px;
+            background-color: #ffd700;
+            border-radius: 50%;
+        }
+
+        /* O contêiner da Lara (sprite) */
+        .personagem-sprite {
+            position: absolute;
+            left: 50px;
+            bottom: 20px;
+            overflow: hidden;
+            image-rendering: pixelated;
+            z-index: 2;
+        }
+
+        /* A imagem da sprite sheet dentro do contêiner */
+        .personagem-sprite img {
+            display: block;
+            position: absolute;
+            top: 0;
+            left: 0;
+            transition: transform 0.1s ease-in-out;
+        }
+
+        h1 {
+            color: #004d40;
+            font-size: 2em;
+            margin-bottom: 20px;
+        }
+
+        /* Mensagem de sucesso */
+        #message-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            text-align: center;
+            font-size: 3em;
+            z-index: 10;
+        }
+
+        #message-overlay p {
+            margin: 0;
+            padding: 20px;
+            background: #004d40;
+            border-radius: 10px;
+        }
+
+        /* Modal do nome */
+        #name-modal {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 15;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            max-width: 400px;
+            position: relative;
+        }
+
+        .modal-content h2 {
+            color: #004d40;
+            margin-top: 0;
+        }
+
+        .modal-content input {
+            padding: 10px;
+            font-size: 1.2em;
+            border: 2px solid #00796b;
+            border-radius: 5px;
+            margin: 10px;
+            width: 200px;
+        }
+
+        .modal-content button {
+            padding: 10px 20px;
+            font-size: 1em;
+            background-color: #00796b;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+
+        .modal-content button:hover {
+            background-color: #004d40;
+        }
+
+        .feedback {
+            margin-top: 10px;
+            font-weight: bold;
+        }
+
+        .correct {
+            color: green;
+        }
+
+        .incorrect {
+            color: red;
+        }
+
+        /* Estilo para imagem de recompensa */
+        .reward-image {
+            max-width: 300px;
+            max-height: 200px;
+            border-radius: 10px;
+            margin: 15px 0;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            display: none;
+        }
+
+        .reward-message {
+            color: green;
+            font-size: 1.1em;
+            margin-top: 10px;
+        }
+
+        /* Modal para foto do caderno */
+        #notebook-modal {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 20;
+        }
+
+        .notebook-modal-content {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+            max-width: 500px;
+            position: relative;
+        }
+
+        /* Botão X no canto superior direito */
+        .close-x {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            background: #ff4444;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .close-x:hover {
+            background: #cc0000;
+        }
+
+        .notebook-image {
+            max-width: 100%;
+            max-height: 400px;
+            border-radius: 10px;
+            margin: 10px 0;
+            cursor: pointer;
+        }
+
+        .close-notebook-btn {
+            padding: 10px 25px;
+            font-size: 1.1em;
+            background-color: #00796b;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 15px;
+        }
+
+        .close-notebook-btn:hover {
+            background-color: #004d40;
+        }
+
+        .close-hint {
+            font-size: 0.9em;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        /* Modal para álbum secreto da Lara */
+        #lara-album-modal {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.95);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 25;
+        }
+
+        .album-modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            text-align: center;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7);
+            max-width: 600px;
+            position: relative;
+        }
+
+        .album-title {
+            color: #004d40;
+            font-size: 2.5em;
+            margin: 0 0 20px 0;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .album-image {
+            max-width: 100%;
+            max-height: 400px;
+            border-radius: 15px;
+            margin: 10px 0;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s ease;
+        }
+
+        .album-image:hover {
+            transform: scale(1.02);
+        }
+
+        .album-navigation {
+            margin: 20px 0;
+        }
+
+        .album-btn {
+            padding: 12px 25px;
+            font-size: 1.2em;
+            background: linear-gradient(45deg, #00796b, #004d40);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            margin: 0 10px;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .album-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 7px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .album-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .photo-counter {
+            color: #666;
+            font-size: 1.1em;
+            margin: 15px 0;
+        }
+
+        .thank-you-message {
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin-top: 20px;
+            font-size: 1.3em;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .close-album-btn {
+            padding: 12px 30px;
+            font-size: 1.2em;
+            background: linear-gradient(45deg, #ff6b6b, #ff5252);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .close-album-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 7px 20px rgba(0, 0, 0, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <h1>Use A e D para Andar, S para Dançar!</h1>
+
+    <div class="game-area">
+        <!-- Elementos da sala de aula -->
+        <div class="blackboard" id="blackboard"></div>
+        <div class="desk1"></div>
+        <div class="desk2"></div>
+        <div class="notebook" id="notebook"></div>
+        <div class="chair1" id="chair1"></div>
+        <div class="chair2"></div>
+        
+        <div class="door"></div>
+
+        <div id="lara-personagem" class="personagem-sprite">
+            <img id="lara-img" src="lara.png" alt="Personagem Lara">
+        </div>
+
+        <div id="message-overlay">
+            <p>Tchau, Lara!</p>
+        </div>
+
+        <!-- Modal para inserir nome -->
+        <div id="name-modal">
+            <div class="modal-content">
+                <h2>Qual é o nome dele?</h2>
+                <p>Digite o nome da pessoa:</p>
+                <input type="text" id="name-input" placeholder="Digite aqui..." maxlength="20">
+                <br>
+                <button onclick="checkName()">Confirmar</button>
+                <button onclick="closeModal()">Cancelar</button>
+                <div id="feedback" class="feedback"></div>
+                
+                <!-- Imagem de recompensa -->
+                <img id="reward-image" class="reward-image" 
+                     src="https://dhiwise-assets.s3.ap-south-1.amazonaws.com/uploadAttachments/parabens-1756660814038.jpg" 
+                     alt="Parabéns! Você acertou!">
+                <div id="reward-message" class="reward-message" style="display: none;">
+                    🎉 Parabéns! Você descobriu o segredo! 🎉
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal do caderno -->
+        <div id="notebook-modal" onclick="closeNotebookModal()">
+            <div class="notebook-modal-content" onclick="event.stopPropagation()">
+                <button class="close-x" onclick="closeNotebookModal()">&times;</button>
+                
+                <h2>📖 Os Bombados!</h2>
+                <img class="notebook-image" 
+                     src="https://dhiwise-assets.s3.ap-south-1.amazonaws.com/uploadAttachments/os_bombados-1756661850424.jpg" 
+                     alt="Os Bombados"
+                     onclick="closeNotebookModal()">
+                <p>💪 Os colegas mais fortes da turma!</p>
+                <button class="close-notebook-btn" onclick="closeNotebookModal()">Fechar</button>
+                <div class="close-hint">Clique na imagem, no X ou fora do modal para fechar</div>
+            </div>
+        </div>
+
+        <!-- Modal do álbum secreto da Lara -->
+        <div id="lara-album-modal" onclick="closeLaraAlbum()">
+            <div class="album-modal-content" onclick="event.stopPropagation()">
+                <h1 class="album-title">💖 Álbum da Lara 💖</h1>
+                
+                <img id="current-lara-photo" class="album-image" src="" alt="Foto da Lara">
+                
+                <div class="photo-counter">
+                    <span id="photo-number">1</span> / <span id="total-photos">3</span>
+                </div>
+                
+                <div class="album-navigation">
+                    <button class="album-btn" id="prev-btn" onclick="previousPhoto()">❮ Anterior</button>
+                    <button class="album-btn" id="next-btn" onclick="nextPhoto()">Próxima ❯</button>
+                </div>
+
+                <div class="thank-you-message">
+                    🎮 Obrigado por jogar! 🎮
+                </div>
+                
+                <button class="close-album-btn" onclick="closeLaraAlbum()">❌ Fechar Álbum</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const laraSpriteContainer = document.getElementById('lara-personagem');
+        const laraImg = document.getElementById('lara-img');
+        const gameArea = document.querySelector('.game-area');
+        const door = document.querySelector('.door');
+        const messageOverlay = document.getElementById('message-overlay');
+        const blackboard = document.getElementById('blackboard');
+        const chair1 = document.getElementById('chair1');
+        const notebook = document.getElementById('notebook');
+        const nameModal = document.getElementById('name-modal');
+        const notebookModal = document.getElementById('notebook-modal');
+        const laraAlbumModal = document.getElementById('lara-album-modal');
+        const nameInput = document.getElementById('name-input');
+        const feedback = document.getElementById('feedback');
+        const rewardImage = document.getElementById('reward-image');
+        const rewardMessage = document.getElementById('reward-message');
+
+        const scaleFactor = 3;
+
+        const SPRITE_ANDANDO = "sprite_personagem.png";
+        const SPRITE_MJ_DANCA = "lara_mj_dance_manto.png";
+        const SPRITE_PARADO = "lara.png";
+        const SPRITE_DANCA_FINAL = "https://dhiwise-assets.s3.ap-south-1.amazonaws.com/uploadAttachments/lara_danca_final-1756661393922.png";
+
+        const andando = { src: SPRITE_ANDANDO, frameWidth: 57.6, totalFrames: 3, height: 86.4 };
+        const mj_danca = { src: SPRITE_MJ_DANCA, frameWidth: 32, totalFrames: 5, height: 32 };
+        const parado = { src: SPRITE_PARADO, frameWidth: 32, totalFrames: 1, height: 32 };
+        const danca_final = { src: SPRITE_DANCA_FINAL, frameWidth: 32, totalFrames: 3, height: 32 };
+
+        // Álbum secreto da Lara
+        const laraPhotos = [
+            {
+                src: "https://dhiwise-assets.s3.ap-south-1.amazonaws.com/uploadAttachments/bom_dia-1756662826311.jpg",
+                title: "Bom Dia ☀️"
+            },
+            {
+                src: "https://dhiwise-assets.s3.ap-south-1.amazonaws.com/uploadAttachments/kauanne-1756662848399.jpg", 
+                title: "Na Sala de Aula 🏫"
+            },
+            {
+                src: "https://dhiwise-assets.s3.ap-south-1.amazonaws.com/uploadAttachments/parabens-1756662876035.jpg",
+                title: "Com a Amiga 👯‍♀️"
+            }
+        ];
+
+        let currentPhotoIndex = 0;
+        let secretWord = "";
+        let currentPositionX = 50;
+        const stepSize = 10;
+        
+        let animationInterval;
+        let currentFrameIndex = 0;
+        let currentState = 'parado';
+
+        let gameActive = true;
+        const correctName = 'andre';
+
+        // Funções do álbum da Lara
+        function openLaraAlbum() {
+            laraAlbumModal.style.display = 'flex';
+            currentPhotoIndex = 0;
+            updateLaraPhoto();
+        }
+
+        function closeLaraAlbum() {
+            laraAlbumModal.style.display = 'none';
+            secretWord = ""; // Reset do código secreto
+        }
+
+        function updateLaraPhoto() {
+            const currentPhoto = laraPhotos[currentPhotoIndex];
+            document.getElementById('current-lara-photo').src = currentPhoto.src;
+            document.getElementById('photo-number').textContent = currentPhotoIndex + 1;
+            document.getElementById('total-photos').textContent = laraPhotos.length;
+            
+            // Atualizar botões
+            document.getElementById('prev-btn').disabled = currentPhotoIndex === 0;
+            document.getElementById('next-btn').disabled = currentPhotoIndex === laraPhotos.length - 1;
+        }
+
+        function nextPhoto() {
+            if (currentPhotoIndex < laraPhotos.length - 1) {
+                currentPhotoIndex++;
+                updateLaraPhoto();
+            }
+        }
+
+        function previousPhoto() {
+            if (currentPhotoIndex > 0) {
+                currentPhotoIndex--;
+                updateLaraPhoto();
+            }
+        }
+
+        // Função para dança especial da cadeira
+        function startChairDance() {
+            if (!gameActive) return;
+            
+            if (currentState !== 'danca_final') {
+                startAnimation(danca_final, 300);
+                currentState = 'danca_final';
+                
+                setTimeout(() => {
+                    if (currentState === 'danca_final') {
+                        clearInterval(animationInterval);
+                        updateLara(parado, 0);
+                        currentState = 'parado';
+                    }
+                }, 3000);
+            }
+        }
+
+        // Função para abrir modal do caderno
+        function openNotebookModal() {
+            if (!gameActive) return;
+            notebookModal.style.display = 'flex';
+        }
+
+        // Função para fechar modal do caderno
+        function closeNotebookModal() {
+            notebookModal.style.display = 'none';
+        }
+
+        // Função para abrir modal do nome
+        function openNameModal() {
+            if (!gameActive) return;
+            nameModal.style.display = 'flex';
+            nameInput.value = '';
+            feedback.textContent = '';
+            rewardImage.style.display = 'none';
+            rewardMessage.style.display = 'none';
+            nameInput.focus();
+        }
+
+        // Função para fechar modal
+        function closeModal() {
+            nameModal.style.display = 'none';
+        }
+
+        // Função para verificar o nome
+        function checkName() {
+            const inputName = nameInput.value.toLowerCase().trim();
+            
+            if (inputName === correctName) {
+                feedback.textContent = '🎉 Correto! É o André!';
+                feedback.className = 'feedback correct';
+                
+                rewardImage.style.display = 'block';
+                rewardMessage.style.display = 'block';
+                
+                setTimeout(() => {
+                    closeModal();
+                }, 4000);
+            } else if (inputName === '') {
+                feedback.textContent = 'Digite um nome primeiro!';
+                feedback.className = 'feedback incorrect';
+                rewardImage.style.display = 'none';
+                rewardMessage.style.display = 'none';
+            } else {
+                feedback.textContent = '❌ Incorreto! Tente novamente...';
+                feedback.className = 'feedback incorrect';
+                rewardImage.style.display = 'none';
+                rewardMessage.style.display = 'none';
+            }
+        }
+
+        // Event listeners
+        blackboard.addEventListener('click', openNameModal);
+        chair1.addEventListener('click', startChairDance);
+        notebook.addEventListener('click', openNotebookModal);
+
+        // Fechar modal com Escape
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape') {
+                closeNotebookModal();
+                closeModal();
+                closeLaraAlbum();
+            }
+
+            // Easter egg "lala" quando o jogo acabou
+            if (!gameActive && messageOverlay.style.display === 'flex') {
+                secretWord += event.key.toLowerCase();
+                
+                // Mantém apenas os últimos 4 caracteres
+                if (secretWord.length > 4) {
+                    secretWord = secretWord.slice(-4);
+                }
+                
+                // Verifica se digitou "lala"
+                if (secretWord === 'lala') {
+                    openLaraAlbum();
+                }
+            }
+        });
+
+        // Event listener para Enter no input
+        nameInput.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter') {
+                checkName();
+            }
+        });
+
+        function updateLara(spriteData, frameIndex) {
+            laraSpriteContainer.style.width = `${spriteData.frameWidth * scaleFactor}px`;
+            laraSpriteContainer.style.height = `${spriteData.height * scaleFactor}px`;
+            laraImg.src = spriteData.src;
+            laraImg.style.width = `${spriteData.totalFrames * spriteData.frameWidth * scaleFactor}px`;
+            laraImg.style.height = `${spriteData.height * scaleFactor}px`;
+            laraImg.style.left = `-${frameIndex * spriteData.frameWidth * scaleFactor}px`;
+        }
+        
+        function startAnimation(sprite, frameDuration = 150) {
+            if (animationInterval) clearInterval(animationInterval);
+            currentFrameIndex = 0;
+            updateLara(sprite, 0);
+
+            animationInterval = setInterval(() => {
+                currentFrameIndex = (currentFrameIndex + 1) % sprite.totalFrames;
+                laraImg.style.left = `-${currentFrameIndex * sprite.frameWidth * scaleFactor}px`;
+            }, frameDuration);
+        }
+
+        function checkDoorCollision() {
+            const laraRight = currentPositionX + laraSpriteContainer.offsetWidth;
+            const doorLeft = gameArea.offsetWidth - door.offsetWidth;
+
+            if (laraRight >= doorLeft) {
+                gameActive = false;
+                clearInterval(animationInterval);
+                laraSpriteContainer.style.display = 'none';
+                messageOverlay.style.display = 'flex';
+            }
+        }
+
+        document.addEventListener('keydown', (event) => {
+            if (!gameActive) return;
+
+            if (event.key === 'a' || event.key === 'A' || event.key === 'ArrowLeft') {
+                if (currentState !== 'andando') {
+                    startAnimation(andando);
+                    currentState = 'andando';
+                }
+                laraImg.style.transform = 'scaleX(-1)';
+                currentPositionX = Math.max(0, currentPositionX - stepSize);
+                laraSpriteContainer.style.left = `${currentPositionX}px`;
+                checkDoorCollision();
+            } else if (event.key === 'd' || event.key === 'D' || event.key === 'ArrowRight') {
+                if (currentState !== 'andando') {
+                    startAnimation(andando);
+                    currentState = 'andando';
+                }
+                laraImg.style.transform = 'scaleX(1)';
+                const maxPosition = gameArea.offsetWidth - laraSpriteContainer.offsetWidth;
+                currentPositionX = Math.min(maxPosition, currentPositionX + stepSize);
+                laraSpriteContainer.style.left = `${currentPositionX}px`;
+                checkDoorCollision();
+            } else if (event.key === 's' || event.key === 'S') {
+                if (currentState !== 'danca') {
+                    startAnimation(mj_danca, 200);
+                    currentState = 'danca';
+                }
+            }
+        });
+
+        document.addEventListener('keyup', (event) => {
+            if (!gameActive) return;
+            
+            if (event.key === 'a' || event.key === 'A' || event.key === 'ArrowLeft' || 
+                event.key === 'd' || event.key === 'D' || event.key === 'ArrowRight' || 
+                event.key === 's' || event.key === 'S') {
+                
+                if (currentState !== 'parado' && currentState !== 'danca_final') {
+                    clearInterval(animationInterval);
+                    updateLara(parado, 0);
+                    currentState = 'parado';
+                }
+            }
+        });
+
+        updateLara(parado, 0);
+    </script>
+</body>
+</html>
